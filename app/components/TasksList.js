@@ -1,9 +1,12 @@
 import React, { Component } from 'react';
-import { FlatList, Text, TextInput, View } from 'react-native';
+import { AsyncStorage, FlatList, Text, TextInput, View } from 'react-native';
 import styles from '../assets/styles';
 
 export default class TasksList extends Component{
 
+    componentDidMount() {
+        this.updateList();
+    }
     
     constructor(props) {
         super(props);
@@ -34,12 +37,20 @@ export default class TasksList extends Component{
         console.log("text: "+text);
     }
 
-    addTask(){
+    async addTask(){
+
         let index = 0;
         let listOfItems = this.state.data.map((i) => {return {key: ++index, value: i.value}});
         listOfItems = [...listOfItems, {key: ++index, value: this.state.text}];
-        console.log(listOfItems);
-        this.setState({ data: listOfItems });
+        await AsyncStorage.setItem('listOfItems', JSON.stringify(listOfItems));
+        this.updateList();        
+    }
+
+    async updateList(){
+        AsyncStorage.getItem('listOfItems')
+        .then((resp) => {return JSON.parse(resp)})
+        .then((parsedResp) => {this.setState({ data: parsedResp })});
+        console.log(this.state.data);
         this.textInputChanged('');
     }
 
@@ -59,5 +70,7 @@ export default class TasksList extends Component{
             value = { this.state.text } 
         ></TextInput>
     }
+
+
 }
 
