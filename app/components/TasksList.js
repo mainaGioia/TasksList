@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { AsyncStorage, FlatList, Text, TextInput, View } from 'react-native';
+import Item from './Item';
 import styles from '../assets/styles';
 
 export default class TasksList extends Component{
@@ -37,34 +38,63 @@ export default class TasksList extends Component{
         console.log("text: "+text);
     }
 
-    async addTask(){
-
-        let index = 0;
-        let listOfItems = this.state.data.map((i) => {return {key: ++index, value: i.value}});
-        listOfItems = [...listOfItems, {key: ++index, value: this.state.text}];
-        await AsyncStorage.setItem('listOfItems', JSON.stringify(listOfItems));
+    async addItem(){
+        let index = this.state.data.length != 0 ? this.state.data[this.state.data.length-1].key : 0;
+        console.log("key of the last one: "+index); 
+        const lastItem = {
+            completed: false, 
+            key: ++index,
+            name: this.state.text,
+        }
+        let listOfTasks = [...this.state.data, lastItem];
+        await AsyncStorage.setItem('listOfItems', JSON.stringify(listOfTasks));
         this.updateList();        
     }
 
-    async updateList(){
+    updateList(){
         AsyncStorage.getItem('listOfItems')
         .then((resp) => {return JSON.parse(resp)})
-        .then((parsedResp) => {this.setState({ data: parsedResp })});
-        console.log(this.state.data);
+        .then((parsedResp) => {this.setState({ data: parsedResp || [] }) } );
+        console.log("data: "+this.state.data);
         this.textInputChanged('');
     }
 
     renderItems(item){
-        return (<Text style={ styles.listItem }>{item.value}</Text>);
-    }
+        return (
+            <Item 
+                completed = {item.completed}
+                key= {item.key}
+                onPress = { () => this.markAsCompleted(item.key) }
+                name = {item.name}
+            ></Item>
+        );
+    };
 
+
+    async markAsCompleted( key ){
+        console.log("key: "+key);
+        try {
+			const itemToUpdate = {
+				...this.state.data[key-1],
+				completed: !this.state.data[key-1].completed
+			};
+			const listOfItems = this.state.data.slice();
+			listOfItems[key -1] = itemToUpdate;
+			await AsyncStorage.setItem('listOfItems', JSON.stringify(listOfItems));
+		}
+		catch (error) {
+			console.log('error updating the list');
+		}
+		this.updateList();
+
+    }
 
     renderHeader = () => {
         return  <TextInput 
-            placeholder = 'Enter an item'
+            placeholder = 'Enter item...'
             autoCorrect = { false }
             onChangeText = { (text) => this.textInputChanged(text) }
-            onSubmitEditing = { () => this.addTask() }
+            onSubmitEditing = { () => this.addItem() }
             returnKeyType = { 'done' }
             style = { styles.textInput }
             value = { this.state.text } 
