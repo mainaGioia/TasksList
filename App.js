@@ -9,20 +9,15 @@
 import React from 'react';
 import TasksList from './app/components/TasksList';
 import { StatusBar, View } from 'react-native';
+import styles from './app/assets/styles';
 
 
 const App: () => React$Node = () => {
   return (
     <>
       <StatusBar barStyle="dark-content" />
-      <View>
-        <TasksList data={[
-          { id : '1', title: 'Apples' },
-          { id : '2', title: 'Oranges' },
-          { id : '3', title: 'Strawberries' },
-          { id : '4', title: 'Bananas' },
-          { id : '5', title: 'Avocados' },
-        ]}/>
+      <View style={styles.container}>
+        <TasksList/>
       </View>
       
     </>
